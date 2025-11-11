@@ -1,0 +1,41 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app_network
+
+  backend:
+    build: ./backend
+    container_name: backend_container
+    ports:
+      - "4000:4000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DB_NAME=authDB
+    depends_on:
+      - mongodb
+    networks:
+      - app_network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_container
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
