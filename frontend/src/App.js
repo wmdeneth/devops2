@@ -1,74 +1,71 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import Login from "./pages/LoginPage";
 import Register from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
+import MyRentalsPage from "./pages/MyRentalsPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
-  const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
-  const [showRegister, setShowRegister] = useState(false);
+  const navigate = useNavigate();
 
+  // Persist user session (basic)
   useEffect(() => {
-    if (user) {
-      fetch("http://localhost:4000/api/hello")
-        .then(res => res.json())
-        .then(data => setMessage(data.message))
-        .catch(err => console.error(err));
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-  }, [user]);
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+    if (userData.role === 'admin') {
+      navigate("/admin");
+    } else {
+      navigate("/");
+    }
+  };
 
   const handleLogout = () => {
     setUser(null);
-    setMessage("");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
-  if (!user) {
-    return (
-      <div>
-        {showRegister ? (
-          <>
-            <Register onRegisterSuccess={() => setShowRegister(false)} />
-            <p style={{ textAlign: "center" }}>
-              Already have an account?{" "}
-              <button 
-                onClick={() => setShowRegister(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#007bff",
-                  textDecoration: "underline",
-                  cursor: "pointer"
-                }}
-              >
-                Login here
-              </button>
-            </p>
-          </>
-        ) : (
-          <>
-            <Login onLogin={setUser} />
-            <p style={{ textAlign: "center" }}>
-              Don't have an account?{" "}
-              <button 
-                onClick={() => setShowRegister(true)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#007bff",
-                  textDecoration: "underline",
-                  cursor: "pointer"
-                }}
-              >
-                Register here
-              </button>
-            </p>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  return <HomePage message={message} user={user} onLogout={handleLogout} />;
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          user && user.role === 'admin'
+            ? <Navigate to="/admin" />
+            : <HomePage user={user} onLogout={handleLogout} />
+        }
+      />
+      <Route
+        path="/login"
+        element={!user ? <Login onLogin={handleLogin} /> : <Navigate to={user.role === 'admin' ? "/admin" : "/"} />}
+      />
+      <Route
+        path="/register"
+        element={!user ? <Register onRegisterSuccess={() => navigate("/login")} /> : <Navigate to={user.role === 'admin' ? "/admin" : "/"} />}
+      />
+      <Route
+        path="/my-rentals"
+        element={
+          user
+            ? (user.role === 'admin' ? <Navigate to="/admin" /> : <MyRentalsPage user={user} onLogout={handleLogout} />)
+            : <Navigate to="/login" />
+        }
+      />
+      <Route
+        path="/admin"
+        element={user && user.role === 'admin' ? <AdminDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" />}
+      />
+    </Routes>
+  );
 }
 
 export default App;

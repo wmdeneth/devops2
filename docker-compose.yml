@@ -1,40 +1,31 @@
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb_container
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - app_network
-
   backend:
     build: ./backend
     container_name: backend_container
     ports:
       - "4000:4000"
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017
-      - DB_NAME=authDB
-    depends_on:
-      - mongodb
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./backend/.env
     networks:
       - app_network
+    restart: always
 
   frontend:
     build: ./frontend
     container_name: frontend_container
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     networks:
       - app_network
-
-volumes:
-  mongodb_data:
-    driver: local
+    restart: always
 
 networks:
   app_network:
