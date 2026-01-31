@@ -48,6 +48,26 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to AWS') {
+            environment {
+                SERVER_IP = credentials('INVENTORY_SERVER_IP')
+            }
+            steps {
+                sshagent(credentials: ['AWS_SSH_KEY']) {
+                    sh """
+                        # 1. Copy compose file to AWS
+                        scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@${SERVER_IP}:~/
+                        
+                        # 2. Deploy using Docker Compose
+                        ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} '
+                            docker-compose pull
+                            docker-compose up -d
+                        '
+                    """
+                }
+            }
+        }
     }
 
     post {

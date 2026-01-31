@@ -1,32 +1,7 @@
+version: '3.8'
 services:
-  backend:
-    build: ./backend
-    container_name: backend_container
-    ports:
-      - "4000:4000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    env_file:
-      - ./backend/.env
-    networks:
-      - app_network
-    restart: always
-
   frontend:
-    build: ./frontend
-    container_name: frontend_container
+    image: wmdeneth/frontend-app:latest
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-    networks:
-      - app_network
+      - "80:3000"
     restart: always
-
-networks:
-  app_network:
-    driver: bridge
