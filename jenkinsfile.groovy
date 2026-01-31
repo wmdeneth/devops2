@@ -55,16 +55,16 @@ pipeline {
             }
             steps {
                 sshagent(credentials: ['AWS_SSH_KEY']) {
-                    sh """
+                    sh '''
                         # 1. Copy compose file to AWS
-                        scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@${SERVER_IP}:~/
+                        scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@$SERVER_IP:~/
                         
                         # 2. Deploy using Docker Compose
-                        ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} '
+                        ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP '
                             docker-compose pull
                             docker-compose up -d
                         '
-                    """
+                    '''
                 }
             }
         }
