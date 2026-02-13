@@ -372,7 +372,7 @@ const HomePage = ({ user, onLogout }) => {
           <div style={styles.heroLeft}>
             <h1 style={styles.heroTitle}>Drive Your Dreams Today</h1>
             <p style={styles.heroSubtitle}>
-              Discover the perfect vehicle for your next adventure. Premium quality cars, unbeatable prices, and exceptional service.
+              Discover thee perfect vehicle for your next adventure. Premium quality cars, unbeatable prices, and exceptional service.
             </p>
             <button
               style={styles.ctaButton}
