@@ -13,10 +13,10 @@ provider "aws" {
 }
 
 # 2. Key Pair (Login Access)
-# Use the public key from the workspace root directory
+# Using the same public key as the root main.tf
 resource "aws_key_pair" "deployer" {
   key_name   = "devops-project-key"
-  public_key = file("${path.module}/../ruhuna-key.pub")
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDd6AMmLhoRkYHQrteU55b+l5x2N9MO+iGAdueCKQe4hb7V3y5Cls9p295C3th5qGlsZr2vom35f6qf+VFFTsdGE4CbqnkP/6X/akbLOtoDHk5zz4Q5wVqQFXDzNAuoDsqUtVm0XL5AtOl0kQqn3HecM5xsDsj9xrY8StXcs19+MW+4bLAZncUofrHx5FSHjECe5I1Ew2d9aI/XaffiZSdDN/G94g0HlFcQZm6j/9tvns80eK47XIidYyR8wR+DXnE1LAQK/XBM3zYZelGJZ7+L88ATcT3YbI7PrKhQbU1p3M/8YLZJOTlRz1EQxT6Duc3JOPPAugOcoKracBPOMekP"
 }
 
 # 3. Security Group (Firewall)
