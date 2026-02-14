@@ -44,14 +44,14 @@ function LoginPage({ onLogin }) {
     <div className="login-page">
       <div className="page-container">
         <div className="card">
-          <h2 className="page-title">{role === 'admin' ? 'Admin Login' : 'User Login'}</h2>
+          <h2 className="page-title">{role === 'admin' ? 'Admin Login' : 'Deneth Login'}</h2>
 
           <div className="role-switcher">
             <button
               className={`role-btn ${role === 'user' ? 'active' : ''}`}
               onClick={() => { setRole('user'); setError(''); }}
             >
-              User
+              Deneth
             </button>
             <button
               className={`role-btn ${role === 'admin' ? 'active' : ''}`}
@@ -65,7 +65,7 @@ function LoginPage({ onLogin }) {
             <input
               className="form-input"
               type="text"
-              placeholder={role === 'admin' ? "Admin Username" : "Username"}
+              placeholder={role === 'admin' ? "Admin Username" : "Deneth Username"}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
