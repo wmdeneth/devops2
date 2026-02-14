@@ -1,0 +1,19 @@
+services:
+  frontend:
+    image: wmdeneth/frontend-app:latest
+    ports:
+      - "80:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+    restart: always
+
+  backend:
+    image: wmdeneth/backend-app:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - SUPABASE_URL=https://sabcspxfmvwtrandssdx.supabase.co
+      - SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhYmNzcHhmbXZ3dHJhbmRzc2R4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTYyNDU1NSwiZXhwIjoyMDg1MjAwNTU1fQ.yKJonHovUhUmCxA2cY5eLgmECyCRTPnFPjZZtHQO1Kw
+      - DATABASE_URL=postgresql://postgres:r7KKL7ri886XTcSv@db.sabcspxfmvwtrandssdx.supabase.co:5432/postgres
+    restart: always
