@@ -59,7 +59,7 @@ resource "aws_security_group" "app_sg" {
 # 4. EC2 Instance (The Server)
 resource "aws_instance" "project_server" {
   ami           = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS (us-east-1). update if region changes!
-  instance_type = "t2.micro"              # Free tier eligible
+  instance_type = "t3.micro"              # Free tier eligible
 
   key_name      = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.app_sg.id]
