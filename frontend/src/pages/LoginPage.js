@@ -81,14 +81,14 @@ function LoginPage({ onLogin }) {
             />
 
             <button type="submit" className="btn btn-primary" style={{ background: role === 'admin' ? '#0f172a' : '' }}>
-              {role === 'admin' ? 'Login as Admin' : 'Login'}
+              {role === 'admin' ? 'Login as Admin' : 'Login as Deneth'}
             </button>
           </form>
           {error && <p className="error">{error}</p>}
 
           {role === 'user' && (
             <p style={{ marginTop: 12, textAlign: 'center' }}>
-              Don't have an account? <Link to="/register" className="btn-link">Register</Link>
+              Don't have a Deneth account? <Link to="/register" className="btn-link">Register</Link>
             </p>
           )}
 
