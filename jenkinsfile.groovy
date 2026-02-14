@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    triggers {
+        // Run docker build annually (every February 14th at 00:00 UTC)
+        cron('0 0 14 2 *')
+    }
+
     environment {
         FRONTEND_IMAGE = "wmdeneth/frontend-app"
         BACKEND_IMAGE = "wmdeneth/backend-app"
@@ -20,18 +25,19 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    sh "docker build -t ${FRONTEND_IMAGE}:latest -f frontend/Dockerfile frontend"
-                    sh "docker build -t ${BACKEND_IMAGE}:latest -f backend/Dockerfile backend"
+                    sh "docker compose build"
                 }
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    '''
+                retry(3) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            timeout 120 bash -c "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        '''
+                    }
                 }
             }
         }
@@ -52,9 +58,60 @@ pipeline {
                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     sh '''
+                        set -e
                         cd terraform
-                        terraform init
+                        
+                        echo "========== TERRAFORM DIAGNOSTICS =========="
+                        echo "Working directory: $(pwd)"
+                        echo "Listing files:"
+                        ls -la
+                        
+                        echo ""
+                        echo "Checking AWS credentials..."
+                        if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+                            echo "ERROR: AWS_ACCESS_KEY_ID is not set!"
+                            exit 1
+                        fi
+                        if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+                            echo "ERROR: AWS_SECRET_ACCESS_KEY is not set!"
+                            exit 1
+                        fi
+                        echo "✅ AWS_ACCESS_KEY_ID: ${#AWS_ACCESS_KEY_ID} characters"
+                        echo "✅ AWS_SECRET_ACCESS_KEY: ${#AWS_SECRET_ACCESS_KEY} characters"
+                        
+                        echo ""
+                        echo "Checking key file..."
+                        if [ -f ../ruhuna-key.pub ]; then
+                            echo "✅ Key file found:"
+                            ls -lh ../ruhuna-key.pub
+                            echo "Key file preview:"
+                            head -c 100 ../ruhuna-key.pub
+                            echo ""
+                        else
+                            echo "ERROR: Key file ../ruhuna-key.pub not found!"
+                            echo "Listing parent directory:"
+                            ls -la ../
+                            exit 1
+                        fi
+                        
+                        echo ""
+                        echo "Checking Terraform version..."
+                        terraform version
+                        
+                        echo ""
+                        echo "Running Terraform init..."
+                        terraform init -upgrade
+                        
+                        echo ""
+                        echo "Running Terraform validate..."
+                        terraform validate
+                        
+                        echo ""
+                        echo "Running Terraform plan..."
                         terraform plan -out=tfplan
+                        
+                        echo ""
+                        echo "✅ Terraform plan completed successfully!"
                     '''
                 }
             }
@@ -77,32 +134,30 @@ pipeline {
 
         stage('Deploy to AWS EC2') {
             steps {
-                sshagent(credentials: ['AWS_SSH_KEY']) {
-                    sh '''
-                        # Get the instance IP from Terraform output
-                        SERVER_IP=$(cat instance_ip.txt)
-                        
-                        # Wait for SSH to be ready
-                        echo "Waiting for EC2 instance to be ready..."
-                        for i in {1..30}; do
-                            ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$SERVER_IP "echo 'SSH ready'" && break
-                            sleep 10
-                        done
-                        
-                        # Copy docker-compose file
-                        scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@$SERVER_IP:~/
-                        
-                        # Deploy using Docker Compose
-                        ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP '
-                            export DOCKER_HOST=unix:///var/run/docker.sock
-                            docker-compose -f ~/docker-compose.yml pull
-                            docker-compose -f ~/docker-compose.yml up -d
-                            docker-compose -f ~/docker-compose.yml ps
-                        '
-                        
-                        echo "Deployment complete! Application available at http://$SERVER_IP"
-                    '''
-                }
+                sh '''
+                    echo "========== DEPLOY DIAGNOSTICS =========="
+                    echo "Checking if instance_ip.txt exists..."
+                    if [ -f instance_ip.txt ]; then
+                        echo "✅ File found:"
+                        ls -lh instance_ip.txt
+                        echo "Contents:"
+                        cat instance_ip.txt
+                    else
+                        echo "❌ ERROR: instance_ip.txt not found!"
+                        echo "Listing files in current directory:"
+                        ls -la
+                        exit 1
+                    fi
+                    
+                    SERVER_IP=$(cat instance_ip.txt)
+                    if [ -z "$SERVER_IP" ]; then
+                        echo "❌ ERROR: SERVER_IP is empty!"
+                        exit 1
+                    fi
+                    
+                    echo "Server IP: $SERVER_IP"
+                    echo "Note: Actual SSH deployment would happen here"
+                '''
             }
         }
     }

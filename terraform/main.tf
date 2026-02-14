@@ -13,12 +13,10 @@ provider "aws" {
 }
 
 # 2. Key Pair (Login Access)
-# IMPORTANT: ensuring you have a key generated locally or we create one here. 
-# For simplicity, we will assume you have a public key at ~/.ssh/id_rsa.pub
-# If not, comment this out and use password authentication or create the key first.
+# Use the public key from the workspace root directory
 resource "aws_key_pair" "deployer" {
   key_name   = "devops-project-key"
-  public_key = file("~/.ssh/id_rsa.pub") 
+  public_key = file("${path.module}/../ruhuna-key.pub")
 }
 
 # 3. Security Group (Firewall)
@@ -59,7 +57,7 @@ resource "aws_security_group" "app_sg" {
 }
 
 # 4. EC2 Instance (The Server)
-resource "aws_instance" "app_server" {
+resource "aws_instance" "project_server" {
   ami           = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS (us-east-1). update if region changes!
   instance_type = "t2.micro"              # Free tier eligible
 
@@ -85,5 +83,5 @@ resource "aws_instance" "app_server" {
 # 6. Output the IP address
 output "instance_ip" {
   description = "The public IP of the application server"
-  value       = aws_instance.app_server.public_ip
+  value       = aws_instance.project_server.public_ip
 }
